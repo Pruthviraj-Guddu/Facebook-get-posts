@@ -1,68 +1,154 @@
-<!DOCTYPE html>
 <html>
+
 <head>
-<title>Facebook Login JavaScript Example</title>
-<meta charset="UTF-8">
+    <title>Rap Facebook</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
+
 <body>
-<script>
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous"
+        src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v10.0&appId=473172387075213&autoLogAppEvents=1"
+        nonce="GsQp0iTy"></script>
+    <script>
 
-  function statusChangeCallback(response) {  // Called with the results from FB.getLoginStatus().
-    console.log('statusChangeCallback');
-    console.log(response);                   // The current login status of the person.
-    if (response.status === 'connected') {   // Logged into your webpage and Facebook.
-      testAPI();  
-    } else {                                 // Not logged into your webpage or we are unable to tell.
-      document.getElementById('status').innerHTML = 'Please log ' +
-        'into this webpage.';
-    }
-  }
+        var response;
+        function statusChangeCallback(response) { // Called with the results from FB.getLoginStatus().
+            console.log('statusChangeCallback');
+            console.log(response); // The current login status of the person.
+            if (response.status === 'connected') { // Logged into your webpage and Facebook.
+                testAPI();
+            } else { // Not logged into your webpage or we are unable to tell.
+                document.getElementById('status').innerHTML = 'Please log ' +
+                    'into this webpage.';
+            }
+        }
 
+        function checkLoginState() { // Called when a person is finished with the Login Button.
+            FB.getLoginStatus(function (response) { // See the onlogin handler
+                statusChangeCallback(response);
+            });
 
-  function checkLoginState() {               // Called when a person is finished with the Login Button.
-    FB.getLoginStatus(function(response) {   // See the onlogin handler
-      statusChangeCallback(response);
-    });
-  }
+            window.fbAsyncInit = function () {
+                FB.init({
+                    appId: '473172387075213',
+                    cookie: true,
+                    xfbml: true,
+                    version: 'v10.0'
+                });
+            };
 
+            FB.getLoginStatus(function (response) { // Called after the JS SDK has been initialized.
+                statusChangeCallback(response); // Returns the login status.
+            });
+        };
 
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '295842682219994',
-      cookie     : true,                     // Enable cookies to allow the server to access the session.
-      xfbml      : true,                     // Parse social plugins on this webpage.
-      version    : 'v10.0'           // Use this Graph API version for this call.
-    });
-
-
-    FB.getLoginStatus(function(response) {   // Called after the JS SDK has been initialized.
-      statusChangeCallback(response);        // Returns the login status.
-    });
-  };
- 
-  function testAPI() {                      // Testing Graph API after login.  See statusChangeCallback() for when this call is made.
-    console.log('Welcome!  Fetching your information.... ');
-    FB.api('/me', function(response) {
-      console.log('Successful login for: ' + response.name);
-      document.getElementById('status').innerHTML =
-        'Thanks for logging in, ' + response.name + '!';
-    });
-  }
-
-</script>
+        function testAPI() { // Testing Graph API after login. See statusChangeCallback() for when this call is made.
+            FB.login(function (response) {
+                if (response.authResponse) {
 
 
-<!-- The JS SDK Login Button -->
+                    FB.api(
+                        '/me',
+                        'GET', {
+                        "fields": "id,name,permissions,posts{message,full_picture,link}"
+                    },
+                        function (response) {
+                            console.log('Successful login for: ' + response.name);
+                            document.getElementById('status').innerHTML = 'Thanks for logging in, ' + response.name + '!';
 
-<fb:login-button scope="public_profile,email" onlogin="checkLoginState();">
-</fb:login-button>
+                            for (i = 0; i < response.posts.data.length; i++) {
+                                var divH5 = document.createElement("h3");
+                                divH5.innerHTML = response.posts.data[i].message;
+                                document.getElementById('post-widget').appendChild(divH5);
 
-<div id="status">
-</div>
+                                var divDesc = document.createElement("p");
+                                divDesc.innerHTML = "the link =>" + response.posts.data[i].link;
+                                document.getElementById('post-widget').appendChild(divDesc);
 
-<!-- Load the JS SDK asynchronously -->
-<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
-<h5>head 5</h5>
-<h5>head 5</h5>
+                                var img = document.createElement('img');
+                                img.src = response.posts.data[i].full_picture;
+                                document.getElementById('post-widget').appendChild(img);
+
+                                if (response.posts.data[i].description != undefined) {
+                                    var divDescription = document.createElement("p");
+                                    divDescription.innerHTML = "the Description =>" + response.posts.data[i].description;
+                                    document.getElementById('post-widget').appendChild(divDescription);
+                                }
+
+                            }
+
+                            /*
+                            $.post('/check-user/', {
+                                user_id: response.id,
+                                user_link: response.link,
+                                user_email: response.email,
+                                user_first_name: response.first_name,
+                                user_last_name: response.last_name,
+                                user_gender: response.gender,
+                                user_location: response.location
+                            }, function (a) {
+                                //success redirect to /profile page
+                                //window.location =  "https://sites.google.com/view/pruthvirajma/";
+                            });
+                            */
+
+                        }
+                    );
+                } else {
+                    console.log('User cancelled login or did not fully authorize.');
+                }
+            }, {
+                scope: 'public_profile, email, user_birthday, user_location, public_profile, user_posts'
+            });
+        }
+
+
+        function fbLogout() {
+            FB.logout(function (response) {
+                console.log('User log out button pressed');
+                // user is now logged out
+            });
+        }
+    </script>
+
+
+    <fb:login-button scope="public_profile, email, user_birthday, user_location, public_profile, user_posts"
+        onlogin="checkLoginState();">
+    </fb:login-button>
+<!--
+    <p>or</p>
+    <div class="fb-login-button" data-width="50" data-size="large" data-button-type="continue_with"
+        data-layout="default" data-auto-logout-link="false" data-use-continue-as="false"></div>
+
+    <button onclick="fbLogout();">click to Logout</button>
+    -->
+    <!--
+    <p>below is login and logout (work in progress)</p>
+    <fb:login-button autologoutlink="true"></fb:login-button>
+-->
+
+
+    <div id="post-container" style="    margin: 0 auto;
+         width: 70%;
+         text-align: center;
+         background: #ededed;
+         padding: 30px;">
+        <div id="post-widget"></div>
+    </div>
+
+    <div id="status"></div>
+
+    <hr>
+    
+    <h2>use the below test credentials</h2>
+    <p>flash_uqxdtgv_fast@tfbnw.net</p>
+    <p>batman_axnbwre_rich@tfbnw.net</p>
+    <p>aquaman_qcsuhzo_wet@tfbnw.net</p>
+    <p>rapattoni_nyppycx_corporation@tfbnw.net</p>
+    <p>9845262124</p>
+
 </body>
+
 </html>
