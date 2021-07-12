@@ -1,0 +1,222 @@
+<html>
+
+<head>
+  <title>Rap Facebook</title>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+  <div id="fb-root"></div>
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v10.0&appId=342820660692823&autoLogAppEvents=1"
+    nonce="GsQp0iTy"></script>
+  <script>
+    var userId;
+    var response;
+    var userAccessToken;
+    var pageResponse;
+    var pages1Id;
+    var pages1Name;
+
+    function statusChangeCallback(response) { // Called with the results from FB.getLoginStatus().
+      console.log('statusChangeCallback');
+      console.log(response); // The current login status of the person.
+      if (response.status === 'connected') { // Logged into your webpage and Facebook.
+        testAPI();
+      } else { // Not logged into your webpage or we are unable to tell.
+        document.getElementById('status').innerHTML = 'Please log ' +
+          'into this webpage.';
+      }
+    }
+
+    function checkLoginState() { // Called when a person is finished with the Login Button.
+      FB.getLoginStatus(function (response) { // See the onlogin handler
+        userAccessToken = response.authResponse.accessToken;
+        statusChangeCallback(response);
+      });
+
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: '342820660692823',
+          cookie: true,
+          xfbml: true,
+          version: 'v10.0'
+        });
+      };
+
+      FB.getLoginStatus(function (response) { // Called after the JS SDK has been initialized.
+        statusChangeCallback(response); // Returns the login status.
+      });
+    };
+
+    function postapi() {
+
+      FB.api(
+        '/me/accounts',
+        'GET', {},
+        function (response) {
+          console.log(response);
+          pageResponse = response;
+          pages1Id = response.data[0].id;
+          pages1Name = response.data[0].name;
+          // userAccessToken = response.data[0].access_token;
+          //var api1 = '/' + pages1Id + '?fields=access_token&access_token=' + userAccessToken;
+          //https://graph.facebook.com/102842168721227/accounts?fields=name,access_token&access_token={user-accesss-token}
+
+          var messageText = "the date is "+Date();
+          var settings = {
+            "url": "https://graph.facebook.com/"+pages1Id+"/feed?message="+messageText+"&access_token="+response.data[0].access_token,
+            "method": "POST",
+            "timeout": 0,
+            "headers": {
+              "Cookie": "fr=1I7oLTHqpErKqerZO..Bgpm2-.Pm.AAA.0.0.Bgpm2-.AWWrbBe21S4; sb=vm2mYAo62QaK9P-ELrvL-ucr"
+            },
+          };
+
+          $.ajax(settings).done(function (response) {
+            console.log(response);
+            alert("Posted with id "+response.id);
+          });
+
+
+          /*
+                    FB.api(
+                      '/102091882131325/feed',
+                      'POST',
+                      { "message": "heeloosgsefgvcc","access_token": response.data[0].access_token },
+                      function (response) {
+                        // Insert your code here
+                      }
+                    );
+          */
+
+          /*    
+                    var api1 = '/' + userId + '/accounts?fields=access_token&access_token=' + userAccessToken;
+                    console.log(api1);
+                    console.log(response);
+                    FB.api(
+                      api1,
+                      'GET',
+          
+                      function (response) {
+          
+                        // Insert your code here
+                      }
+                    );
+          */
+
+          document.getElementById('Page1Name').innerHTML = 'pages1Name= ' + response.data[0].name + ' pages1Id=' + response.data[0].id;
+        }
+      );
+    }
+
+    function testAPI() { // Testing Graph API after login. See statusChangeCallback() for when this call is made.
+      FB.login(function (response) {
+        if (response.authResponse) {
+
+
+          FB.api(
+            '/me',
+            'GET', {
+            "fields": "id,name,permissions,posts{message,full_picture,link}"
+          },
+            function (response) {
+              userId = response.id;
+
+              //console.log('access authResponse accessToken' + response.authResponse.accessToken);
+              //userAccessToken = response.authResponse.accessToken;
+
+              /*var hours = Math.floor(response.authResponse.expiresIn / 60);
+              var minutes = num % 60;
+              document.getElementById('expiresIn').innerHTML = 'expiresIn = ' + hours + ":" + minutes;
+              */
+              console.log('Successful login for: ' + response.name);
+
+              document.getElementById('status').innerHTML = 'Thanks for logging in, ' + response.name + '!'; // + 'for ' + minutes + ' minutes';
+
+              for (i = 0; i < response.posts.data.length; i++) {
+                var divH5 = document.createElement("h3");
+                divH5.innerHTML = response.posts.data[i].message;
+                document.getElementById('post-widget').appendChild(divH5);
+
+                var divDesc = document.createElement("p");
+                divDesc.innerHTML = "the link =>" + response.posts.data[i].link;
+                document.getElementById('post-widget').appendChild(divDesc);
+
+                var img = document.createElement('img');
+                img.src = response.posts.data[i].full_picture;
+                document.getElementById('post-widget').appendChild(img);
+
+                if (response.posts.data[i].description != undefined) {
+                  var divDescription = document.createElement("p");
+                  divDescription.innerHTML = "the Description =>" + response.posts.data[i]
+                    .description;
+                  document.getElementById('post-widget').appendChild(divDescription);
+                }
+
+              }
+            }
+          );
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+        }
+      }, {
+        scope: 'public_profile, email, user_birthday, user_location'//, public_profile, user_posts,manage_pages,publish_pages,pages_show_list'
+      });
+    }
+
+
+    function fbLogout() {
+      FB.logout(function (response) {
+        console.log('User log out button pressed');
+        // user is now logged out
+      });
+    }
+  </script>
+
+
+  <fb:login-button
+    scope="public_profile, email, user_birthday, user_location, public_profile, user_posts,manage_pages,publish_pages,pages_show_list"
+    onlogin="checkLoginState();">
+  </fb:login-button>
+
+  <button onclick="postapi();">click to post</button>
+
+  <!--
+    <p>or</p>
+    <div class="fb-login-button" data-width="50" data-size="large" data-button-type="continue_with"
+        data-layout="default" data-auto-logout-link="false" data-use-continue-as="false"></div>
+
+    <button onclick="fbLogout();">click to Logout</button>
+    -->
+  <!--
+    <p>below is login and logout (work in progress)</p>
+    <fb:login-button autologoutlink="true"></fb:login-button>
+-->
+
+
+  <div id="post-container" style="    margin: 0 auto;
+         width: 70%;
+         text-align: center;
+         background: #ededed;
+         padding: 30px;">
+    <div id="post-widget"></div>
+  </div>
+
+  <div id="status"></div>
+  <div id="expiresIn"></div>
+  <div id="Page1Name"></div>
+
+  <hr>
+
+  <h2>use the below test credentials</h2>
+  <p>phone_guonhvz_black@tfbnw.net</p>
+  <p>water_govhugq_melon@tfbnw.net</p>
+  <p>9845262124</p>
+  
+  <p>A Million Ways to Die in the West by phone_guonhvz_black@tfbnw.net </p>
+  <a href="https://www.facebook.com/A-Million-Ways-to-Die-in-the-West-102091882131325">A Million Ways to Die in the West</a>
+</body>
+
+</html>
